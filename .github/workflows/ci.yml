@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [develop, staging, main]
+  pull_request:
+    branches: [develop, staging, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Python 3.12 · pytest
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+      - name: Run tests
+        env:
+          # no network in CI: the taxonomy client degrades to the vendored export,
+          # /api/ask must answer 503, and exports go to a temp dir.
+          TAXONOMY_BASE_URL: ""
+          OPENAI_API_KEY: ""
+        run: pytest -q
+      - name: Seed batches are valid claims
+        run: |
+          python - <<'PY'
+          import glob, json
+          from ingest.common import validate_claim
+          total = 0
+          for path in sorted(glob.glob("data/claims/seed-*.jsonl")):
+              with open(path, encoding="utf-8") as fh:
+                  for lineno, line in enumerate(fh, 1):
+                      if line.strip():
+                          validate_claim(json.loads(line))
+                          total += 1
+          print(f"{total} seed claims validate against the contract schema")
+          PY
+
+  frontend:
+    name: Node 20 · lint, test, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  secrets:
+    name: No secrets committed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Look for API keys and .env files in the history
+        run: |
+          set -e
+          if git log -p --all | grep -nE '(sk-[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16})'; then
+            echo "::error::a secret-looking string is present in the git history"; exit 1
+          fi
+          if git ls-files | grep -E '(^|/)\.env$|access-key\.txt$'; then
+            echo "::error::an environment file is tracked"; exit 1
+          fi
+          echo "clean"
