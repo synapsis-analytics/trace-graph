@@ -189,7 +189,9 @@ export function buildTree(nodes: GraphNode[], edges: GraphEdge[]): TreeNode[] {
       c.results.forEach((r) => t.results.add(r));
       c.partners.forEach((p) => t.partners.add(p));
       c.countries.forEach((x) => t.countries.add(x));
-      t.budget += c.budget;
+      // Money boundary: an HLO's budget is its own PORB attribute (already the sum of its indicator rows),
+      // so indicator budgets are never added into it again; only hlo → aow → program sums upward.
+      if (t.node.type !== "hlo") t.budget += c.budget;
     }
     t.children.sort((a, b) => a.node.label.localeCompare(b.node.label));
     return t;
