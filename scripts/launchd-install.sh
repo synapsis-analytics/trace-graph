@@ -33,6 +33,15 @@ cat > "$PLIST" <<EOF
   <key>StandardErrorPath</key><string>${WORKTREE}/data/server.log</string>
 </dict></plist>
 EOF
+# bootout is asynchronous: bootstrapping again immediately fails with "5: Input/output error",
+# so wait for the label to actually disappear (and retry once) before bootstrapping.
 launchctl bootout "gui/$(id -u)/${LABEL}" 2>/dev/null || true
-launchctl bootstrap "gui/$(id -u)" "$PLIST"
+for _ in $(seq 1 20); do
+  launchctl print "gui/$(id -u)/${LABEL}" >/dev/null 2>&1 || break
+  sleep 0.5
+done
+if ! launchctl bootstrap "gui/$(id -u)" "$PLIST" 2>/dev/null; then
+  sleep 2
+  launchctl bootstrap "gui/$(id -u)" "$PLIST"
+fi
 echo "installed ${LABEL} -> ${WORKTREE} :${PORT} (logs: ${WORKTREE}/data/server.log)"
