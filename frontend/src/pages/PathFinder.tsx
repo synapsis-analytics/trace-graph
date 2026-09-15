@@ -22,8 +22,10 @@ export default function PathFinder() {
   const { data: lenses } = useLenses();
   const { data, isFetching, error, refetch } = usePath(from?.id ?? null, to?.id ?? null, lens || undefined);
 
-  // Deep link from the detail drawer: /path?from=trace:...
+  // Deep link from the detail drawer / the demo script: /path?from=trace:…&to=trace:…&lens=money
   const fromParam = params.get("from");
+  const toParam = params.get("to");
+  const lensParam = params.get("lens");
   useEffect(() => {
     let cancelled = false;
     if (fromParam && !from) {
@@ -34,10 +36,22 @@ export default function PathFinder() {
         })
         .catch(() => undefined);
     }
+    if (toParam && !to) {
+      api
+        .object(toParam)
+        .then((o) => {
+          if (!cancelled) setTo(o);
+        })
+        .catch(() => undefined);
+    }
     return () => {
       cancelled = true;
     };
-  }, [fromParam, from]);
+  }, [fromParam, from, toParam, to]);
+
+  useEffect(() => {
+    if (lensParam) setLens(lensParam);
+  }, [lensParam]);
 
   const lensDef = (lenses ?? []).find((l) => l.name === lens);
   const paths = data?.paths ?? [];
