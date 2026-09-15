@@ -31,9 +31,13 @@ fuzzy_duplicate_threshold: 92
 # Institution names share long boilerplate ("... International Center for ... Research"), so the
 # default 92 flags unrelated institutes; 95 keeps the true near-duplicates.
 fuzzy_duplicate_threshold_by_type:
-  person: off
-  institution: 95
-  concept: 97
+  person: off        # author names legitimately repeat and we have no disambiguator
+  indicator: off     # a KPI line's identity is its PORB row (centre + HLO + KPI type + budget);
+                     # the generated label repeats verbatim across budget lines by design
+  document: off      # evidence documents are identified by their URL; labels are link text
+                     # fragments ("Throughout", "List of sites ...") and collide constantly
+  institution: 95    # long shared boilerplate ("... International Center for ... Research")
+  concept: 97        # taxonomy terms are short; 92 conflates "seed" and "seed systems"
   country: off
   region: off
 

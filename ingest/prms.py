@@ -493,7 +493,11 @@ def build_claims(programs: list[dict[str, Any]], results: list[dict[str, Any]],
                        "is_new_variety": inn.get("is_new_variety"),
                        "number_of_varieties": inn.get("number_of_varieties"),
                        "result_type": r["result_type"]},
-                alt_ids=[{"scheme": "prms_result_id", "value": str(r["id"])}])
+                # WP-I: the innovation detail record is keyed by the PRMS result row but is NOT
+                # the same object as the result, so it gets its own scheme — using
+                # `prms_result_id` made the QA duplicate check (rightly) flag an alt-id clash
+                # with the result and kept all 10 innovation objects out of the graph.
+                alt_ids=[{"scheme": "prms_innovation_id", "value": str(r["id"])}])
             # Direction decided by WP-D: the innovation record DESCRIBES the reported result.
             link(iid, "DESCRIBES", rid, f"results_innovations_dev.results_id={r['id']}",
                  attrs={"note": "innovation detail record of the PRMS result"}, band="high")

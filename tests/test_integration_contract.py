@@ -158,3 +158,34 @@ def test_mcp_pin_matches_the_installed_sdk():
     req = open("requirements.txt", encoding="utf-8").read()
     assert "mcp>=2.0" in req
     assert int(version("mcp").split(".")[0]) >= 2
+
+
+# --------------------------------------------------------------- rebuild stability
+
+def test_rebuild_keeps_the_same_edge_ids(client, seeded):
+    """`rebuild` must be idempotent down to the ids, not just the counts: published snapshots
+    cite edge ids, so a rematerialisation may not renumber them."""
+    from app.db import connect
+    from app.registry import rebuild, stable_link_id
+
+    def edges():
+        with connect(readonly=True) as conn:
+            return {(r["subject"], r["predicate"], r["object"]): r["id"]
+                    for r in conn.execute("SELECT id, subject, predicate, object FROM links")}
+
+    before = edges()
+    assert before
+    rebuild()
+    after = edges()
+    assert before == after
+    rebuild()
+    assert edges() == after
+
+
+def test_stable_link_id_is_a_pure_function_of_the_triple():
+    from app.registry import stable_link_id
+
+    a = stable_link_id("trace:result:prms-1", "PART_OF", "trace:program:sp01")
+    b = stable_link_id("trace:result:prms-1", "PART_OF", "trace:program:sp01")
+    c = stable_link_id("trace:result:prms-2", "PART_OF", "trace:program:sp01")
+    assert a == b and a != c and a.startswith("lnk_")

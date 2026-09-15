@@ -14,7 +14,7 @@ OBJECT_TYPES: tuple[str, ...] = (
 ALT_ID_SCHEMES: tuple[str, ...] = (
     "prms_result_id", "prms_result_code", "cgspace_handle", "doi", "clarisa_institution_id",
     "iso2", "clarisa_initiative_code", "porb_row", "taxonomy_term_id", "taxonomy_uri",
-    "toc_result_id",
+    "toc_result_id", "prms_innovation_id",
 )
 
 ID_RE = re.compile(r"^trace:([a-z_]+):([a-z0-9][a-z0-9._-]*)$")

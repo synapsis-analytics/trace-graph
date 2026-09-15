@@ -1,6 +1,7 @@
 """Append-only claims registry + materialisation into the object/link graph (PLAN §3.4)."""
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -26,6 +27,13 @@ def new_claim_id() -> str:
 
 def new_link_id() -> str:
     return f"lnk_{ULID()}"
+
+
+def stable_link_id(subject: str, predicate: str, object_: str) -> str:
+    """Deterministic fallback edge id so that `rebuild` is byte-stable, not just count-stable:
+    a published snapshot must keep its edge ids when the graph is rematerialised."""
+    digest = hashlib.sha1(f"{subject}|{predicate}|{object_}".encode("utf-8")).hexdigest()[:20]
+    return f"lnk_h{digest}"
 
 
 class RegistryError(ValueError):
@@ -190,7 +198,14 @@ def _insert_link(conn, claim: dict) -> None:
         "SELECT id FROM links WHERE subject=? AND predicate=? AND object=?",
         (claim["subject"], claim["predicate"], claim["object"]),
     ).fetchone()
-    lid = existing["id"] if existing else new_link_id()
+    if existing:
+        lid = existing["id"]
+    else:
+        # prefer the id the claim itself declares (committed batches carry one), otherwise a
+        # deterministic hash of the triple — never a fresh random id, which would change on rebuild
+        declared = payload.get("id")
+        lid = (declared if isinstance(declared, str) and declared.startswith("lnk_")
+               else stable_link_id(claim["subject"], claim["predicate"], claim["object"]))
     conn.execute(
         "INSERT INTO links(id, subject, predicate, object, attrs_json, claim_id, qa_json) "
         "VALUES(?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET attrs_json=excluded.attrs_json, "
