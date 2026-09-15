@@ -1,0 +1,37 @@
+# TRACE QA / reconciliation rules (PLAN §3.5). Weights are editable: a failed check
+# subtracts its weight from a starting score of 1.0. Bands: high >= 0.85 -> accepted,
+# 0.6 <= score < 0.85 -> review, < 0.6 -> rejected (stored + visible, never deleted).
+version: 1
+
+bands:
+  high: 0.85      # >= high  -> accepted
+  medium: 0.60    # >= medium (and < high) -> review; below -> rejected
+
+weights:
+  well_formed: 0.60          # schema / known type / known predicate / endpoint type fit
+  id_resolvable: 0.30        # subject & object exist (or are created in the same batch)
+  duplicate: 0.25            # exact alt-id clash -> SAME_AS suggestion; fuzzy label clash
+  taxonomy_resolvable: 0.20  # TAGGED_WITH: term exists and is not deprecated
+  plausible_geo: 0.20        # valid ISO country + inside the program's known countries
+  plausible_time: 0.18       # year within year_range
+  evidence_present: 0.16     # EVIDENCED_BY carries a url/handle/doi
+  provenance_strength: 1.0   # multiplied by provenance_penalty below
+
+# Softer penalty for "warning"-style failures (fuzzy duplicate, geo outside the PORB list).
+soft_factor: 0.7
+
+# rapidfuzz token_set_ratio threshold (0-100) for same-type label duplicates.
+fuzzy_duplicate_threshold: 92
+
+# signed > recorded > harvested (PLAN D6): penalty subtracted from the score.
+provenance_penalty:
+  signed: 0.0
+  recorded: 0.02
+  harvested: 0.05
+  unknown: 0.10
+
+year_range: [2022, 2026]
+
+# Claims of these kinds always land in the review queue, whatever the score.
+force_review_kinds:
+  - candidate_concept

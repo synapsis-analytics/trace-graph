@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "trace-graph"
+version = "0.1.0"
+description = "TRACE Graph — taxonomy-referenced claims registry and lineage graph over CGIAR portfolio knowledge"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+
+[project.scripts]
+trace = "ingest.cli:main"
+trace-api = "app.cli:main"
+trace-mcp = "app.mcp_server:main"
+
+[tool.setuptools]
+packages = ["app", "app.api", "ingest"]

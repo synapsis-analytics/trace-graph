@@ -1,0 +1,93 @@
+# TRACE lenses (PLAN §3.6 CONTRACT). A lens is a named, explainable set of allowed path
+# patterns. Neighbourhood/path/graph queries filter edges through the lens so that a path is
+# only walked when it is meaningful for the question being asked (Jose's granularity concern).
+# Each path is [type, PREDICATE, type, PREDICATE, type, ...]; every consecutive triple becomes
+# an allowed (from_type, predicate, to_type) step, traversable in both directions but always
+# *reported* with its direction.
+version: 1
+
+lenses:
+  portfolio:
+    label: Portfolio structure
+    description: >-
+      The results framework spine only: Program → Area of Work → High-Level Output →
+      Indicator/Outcome. Use it to see how the portfolio is organised, never to count delivery.
+    paths:
+      - [aow, PART_OF, program]
+      - [hlo, PART_OF, aow]
+      - [indicator, PART_OF, hlo]
+      - [outcome, PART_OF, program]
+      - [hlo, SYNERGY_WITH, program]
+      - [indicator, PART_OF, hlo, PART_OF, aow, PART_OF, program]
+
+  delivery:
+    label: What was delivered, where and by whom
+    description: >-
+      Results and what they contribute to, who produced them and in which country they were
+      delivered. Result→country here is the *delivery* geography of a single result — do not
+      aggregate it upward as a portfolio-level country claim.
+    paths:
+      - [result, CONTRIBUTES_TO, hlo, PART_OF, aow, PART_OF, program]
+      - [result, CONTRIBUTES_TO, indicator, PART_OF, hlo]
+      - [result, CONTRIBUTES_TO, outcome, PART_OF, program]
+      - [result, REPORTED_UNDER, program]
+      - [result, PRODUCED_BY, institution]
+      - [result, WITH_PARTNER, institution]
+      - [result, LOCATED_IN, country]
+      - [result, LOCATED_IN, region]
+      - [innovation, CONTRIBUTES_TO, hlo]
+
+  evidence:
+    label: Evidence chain
+    description: >-
+      The chain from an innovation or result to the knowledge products that evidence it and the
+      concepts they are tagged with — Jules' "forwards and backwards in time" view.
+    paths:
+      - [result, SAME_AS, kp]
+      - [result, EVIDENCED_BY, kp]
+      - [result, EVIDENCED_BY, document]
+      - [kp, DESCRIBES, result]
+      - [kp, DESCRIBES, innovation]
+      - [kp, TAGGED_WITH, concept]
+      - [result, TAGGED_WITH, concept]
+      - [concept, BROADER, concept]
+      - [concept, CANDIDATE_FOR, concept]
+      - [kp, AUTHORED_BY, person]
+      - [innovation, CONTRIBUTES_TO, hlo]
+      - [result, EVIDENCED_BY, kp, TAGGED_WITH, concept]
+
+  money:
+    label: Money
+    description: >-
+      Funding structure only: projects fund HLOs (and results), budgets live as attributes on the
+      HLO node. Money is never prorated across neighbours, so this lens deliberately refuses to
+      traverse result→country, result→partner and any tagging edge.
+    paths:
+      - [hlo, FUNDED_BY, project]
+      - [result, FUNDED_BY, project]
+      - [program, FUNDED_BY, project]
+      - [aow, FUNDED_BY, project]
+      - [hlo, PART_OF, aow, PART_OF, program]
+    excludes:
+      - [result, LOCATED_IN, country]
+      - [result, WITH_PARTNER, institution]
+      - [any, TAGGED_WITH, concept]
+    boundary_attrs: [budget_usd, amount_usd, target, share_pct]
+    notes: >-
+      Boundary rule (PLAN D-Jose-c): budget_usd is an attribute of the HLO and is NOT propagated
+      to neighbours. Aggregations always count distinct by object id.
+
+  partnership:
+    label: Partnerships
+    description: >-
+      Who works with whom: institutions through the results they co-deliver and through the PORB
+      partner rows on HLOs, plus the countries those HLOs work in.
+    paths:
+      - [result, WITH_PARTNER, institution]
+      - [result, PRODUCED_BY, institution]
+      - [result, REPORTED_UNDER, program]
+      - [hlo, WITH_PARTNER, institution]
+      - [hlo, LOCATED_IN, country]
+      - [hlo, PART_OF, aow, PART_OF, program]
+      - [institution, WITH_PARTNER, institution]
+      - [outcome, STUDIED_BY, melia_study]
