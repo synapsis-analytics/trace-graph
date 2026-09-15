@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+pydantic>=2
+python-dotenv
+httpx
+jsonschema
+rapidfuzz
+networkx
+python-louvain
+pyyaml
+mcp>=1.10
+openai
+python-ulid
+openpyxl
+pycountry

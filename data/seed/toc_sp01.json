@@ -1,0 +1,125 @@
+{
+ "channel": "toc",
+ "snapshot": "PORB_MASTER_All_Programs_13Aug2026",
+ "public": true,
+ "program": {
+  "code": "SP01",
+  "name": "Breeding for Tomorrow"
+ },
+ "generated_at": "2026-09-15T20:00:00Z",
+ "toc_export_available": false,
+ "toc_note": "PRMS toc_result holds no rows for initiatives 50-62 (the 2025 Science Programs); results_toc_result_indicators stores opaque external UUIDs. The spine below is derived from the PORB workbook.",
+ "counts": {
+  "aow_part_of": 5,
+  "hlo_part_of": 20,
+  "outcome_part_of": 16,
+  "hlo_contributes_to": 52,
+  "porb_documents": 13
+ },
+ "porb_documents": [
+  {
+   "uuid": "a88f8775-4ba9-41b6-9525-0d698d83cfb4",
+   "handle": "10568/175917",
+   "title": "Plan of Results and Budget 2025: CGIAR Science Program on Policy Innovations",
+   "issued": "2025-08-01",
+   "program_name": "Policy Innovations",
+   "program_code": "SP07"
+  },
+  {
+   "uuid": "ba9ddb67-3cd8-4c2a-9ac9-1917439d3426",
+   "handle": "10568/175918",
+   "title": "Plan of Results and Budget 2025: CGIAR Accelerator on Gender Equality and Inclusion",
+   "issued": "2025-07-01",
+   "program_name": "Gender Equality and Inclusion",
+   "program_code": "SP10"
+  },
+  {
+   "uuid": "2fcd7352-30ed-41a5-a41a-386dec036259",
+   "handle": "10568/175919",
+   "title": "Plan of Results and Budget 2025: CGIAR Science Program on Better Diets and Nutrition",
+   "issued": "2025-07-01",
+   "program_name": "Better Diets and Nutrition",
+   "program_code": "SP05"
+  },
+  {
+   "uuid": "8acc660f-7305-4e4b-ab21-1c192611b017",
+   "handle": "10568/175921",
+   "title": "Plan of Results and Budget 2025: CGIAR Science Program on Climate Action",
+   "issued": "2025-08-01",
+   "program_name": "Climate Action",
+   "program_code": "SP06"
+  },
+  {
+   "uuid": "3271720b-98a5-4bcb-9803-398b74cab543",
+   "handle": "10568/175922",
+   "title": "Plan of Results and Budget 2025: CGIAR Science Program on Food Frontiers and Security",
+   "issued": "2025-07-01",
+   "program_name": "Food Frontiers and Security",
+   "program_code": "SP08"
+  },
+  {
+   "uuid": "038aa771-4077-46be-8d34-efe62b4388a2",
+   "handle": "10568/176102",
+   "title": "Plan of Results and Budget 2025: CGIAR Accelerator on Capacity Sharing",
+   "issued": "2025-08-01",
+   "program_name": "Capacity Sharing",
+   "program_code": "SP11"
+  },
+  {
+   "uuid": "3fb6246e-9ef1-4310-8c52-c4c946a9db99",
+   "handle": "10568/176103",
+   "title": "Plan of Results and Budget 2025: CGIAR Accelerator on Digital Transformation",
+   "issued": "2025-08-01",
+   "program_name": "Digital Transformation",
+   "program_code": "SP12"
+  },
+  {
+   "uuid": "302ea600-c601-403e-8b29-e65bfa501e95",
+   "handle": "10568/176104",
+   "title": "Plan of Results and Budget 2025: CGIAR Science Program on Sustainable Animal and Aquatic Foods",
+   "issued": "2025-08-01",
+   "program_name": "Sustainable Animal and Aquatic Foods",
+   "program_code": "SP03"
+  },
+  {
+   "uuid": "9f94bef2-d8f5-4f42-887c-7a1dbb3333c4",
+   "handle": "10568/176105",
+   "title": "Plan of Results and Budget 2025: CGIAR Science Program on Multifunctional Landscapes",
+   "issued": "2025-08-01",
+   "program_name": "Multifunctional Landscapes",
+   "program_code": "SP04"
+  },
+  {
+   "uuid": "e5edf9cd-51b3-4b13-80dd-3bb21975fdcf",
+   "handle": "10568/176124",
+   "title": "Plan of Results and Budget 2025: CGIAR Science Program on Breeding for Tomorrow",
+   "issued": "2025-08-15",
+   "program_name": "Breeding for Tomorrow",
+   "program_code": "SP01"
+  },
+  {
+   "uuid": "3e5025e4-6523-4f4f-8ead-a71c2610d28b",
+   "handle": "10568/176125",
+   "title": "Plan of Results and Budget 2025: CGIAR Accelerator on Genebanks",
+   "issued": "2025-08-01",
+   "program_name": "Genebanks",
+   "program_code": "SP13"
+  },
+  {
+   "uuid": "a5c4b258-81b8-42ba-84d5-dad9f42e91dc",
+   "handle": "10568/176126",
+   "title": "Plan of results and budget 2025: CGIAR Science Program on Scaling for Impact",
+   "issued": "2025-08-01",
+   "program_name": "Scaling for Impact",
+   "program_code": "SP09"
+  },
+  {
+   "uuid": "fd2aeeb5-0f5b-41d7-8cae-75dc88dc7027",
+   "handle": "10568/176314",
+   "title": "Plan of results and budget 2025: CGIAR Science Program on Sustainable Farming",
+   "issued": "2025-09-01",
+   "program_name": "Sustainable Farming",
+   "program_code": "SP02"
+  }
+ ]
+}
