@@ -72,7 +72,7 @@ class AskUnavailable(RuntimeError):
     pass
 
 
-def ask(question: str, max_rounds: int = 5) -> dict[str, Any]:
+def ask(question: str, max_rounds: int = 8) -> dict[str, Any]:
     settings = get_settings()
     if not settings.openai_api_key:
         raise AskUnavailable("OPENAI_API_KEY not configured")
@@ -108,5 +108,23 @@ def ask(question: str, max_rounds: int = 5) -> dict[str, Any]:
             tool_calls_log.append({"name": tc.function.name, "arguments": args})
             messages.append({"role": "tool", "tool_call_id": tc.id,
                              "content": json.dumps(result, default=str)[:20000]})
+    truncated = False
+    if not answer:
+        # The tool budget ran out while the model was still exploring. Never return an empty
+        # answer: ask once more with the tools switched off so it has to conclude from what it has.
+        truncated = True
+        messages.append({
+            "role": "user",
+            "content": ("You have used the maximum number of tool calls. Answer now from the "
+                        "evidence you already have, citing the TRACE ids you used, and say "
+                        "explicitly what you could not verify."),
+        })
+        try:
+            final = client.chat.completions.create(model=model, messages=messages,
+                                                   tools=TOOLS, tool_choice="none")
+            answer = final.choices[0].message.content or ""
+        except Exception as exc:  # pragma: no cover - upstream failure
+            answer = f"(no answer: the model stopped after {len(tool_calls_log)} tool calls — {exc})"
     cited = sorted(set(ID_RE.findall(answer)))
-    return {"answer": answer, "model": model, "tool_calls": tool_calls_log, "objects_cited": cited}
+    return {"answer": answer, "model": model, "tool_calls": tool_calls_log,
+            "objects_cited": cited, "tool_budget_exhausted": truncated}
