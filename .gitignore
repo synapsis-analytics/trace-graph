@@ -10,3 +10,4 @@ frontend/dist/
 .DS_Store
 *.log
 /tmp/
+frontend/*.tsbuildinfo
