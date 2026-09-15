@@ -1,7 +1,7 @@
 """/api/graph, /api/path, /api/lenses."""
 from __future__ import annotations
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
 from app.graph import shortest_path, whole_graph
 from app.lenses import lens_definitions
@@ -33,4 +33,9 @@ def path(
     lens: str | None = None,
     max_len: int = Query(6, ge=1, le=8),
 ):
-    return shortest_path(from_, to, lens=lens, max_len=max_len)
+    """CONTRACT: 404 only for unknown ids. "No valid path under this lens" is a 200 answer
+    with an empty `paths` list and a plain-English `explanation`."""
+    out = shortest_path(from_, to, lens=lens, max_len=max_len)
+    if out.get("unknown_id"):
+        raise HTTPException(status_code=404, detail=out.get("reason", "unknown object"))
+    return out

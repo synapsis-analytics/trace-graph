@@ -195,6 +195,16 @@ def run(porb_extract: str, registry: str, out: str, extract: str,
     return summary
 
 
+def run_channel(limit: int | None = None, load: bool = True, out: str | None = None,
+                toc_export: str | None = None, **_: object) -> dict:
+    """Keyword-only entry point for POST /api/ingest/toc (PLAN §4). `limit` is ignored: the
+    results-framework spine is a whole or nothing."""
+    out_path = C.channel_out_path(CHANNEL, out)
+    return C.channel_entry(CHANNEL, lambda: run(
+        "data/seed/porb_sp01.json", DEFAULT_REGISTRY, out_path,
+        C.runtime_extract_path(CHANNEL), None, toc_export), load=load)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="TRACE intake channel: ToC / results framework")
     ap.add_argument("--porb-extract", default="data/seed/porb_sp01.json")

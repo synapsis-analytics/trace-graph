@@ -298,6 +298,15 @@ def run(registry: str, program: str, limit: int, bridge: str, out: str,
     return summary
 
 
+def run_channel(limit: int | None = None, load: bool = True, out: str | None = None,
+                program: str = "Breeding for Tomorrow", **_: object) -> dict:
+    """Keyword-only entry point for POST /api/ingest/cgspace (PLAN §4)."""
+    out_path = C.channel_out_path(CHANNEL, out)
+    return C.channel_entry(CHANNEL, lambda: run(
+        DEFAULT_REGISTRY, program, int(limit or 50), "data/seed/prms_sp01_results.json",
+        out_path, C.runtime_extract_path(CHANNEL)), load=load)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="TRACE intake channel: CGSpace")
     ap.add_argument("--registry", default=DEFAULT_REGISTRY)

@@ -183,6 +183,22 @@ def _check_id_resolvable(claim: dict, ctx: QAContext) -> dict:
     return _check("id_resolvable", not missing, ("unresolved: " + ", ".join(missing)) if missing else "")
 
 
+def fuzzy_threshold_for(type_: str, rules: dict) -> int | None:
+    """Per-type fuzzy-duplicate threshold; None means the type is exempt from the check."""
+    default = int(rules.get("fuzzy_duplicate_threshold", 92))
+    overrides = rules.get("fuzzy_duplicate_threshold_by_type") or {}
+    if type_ not in overrides:
+        return default
+    value = overrides[type_]
+    if value is None or value is False or str(value).lower() in ("off", "none", "never", "false"):
+        return None
+    try:
+        value = int(value)
+    except (TypeError, ValueError):
+        return default
+    return None if value > 100 else value
+
+
 def _check_duplicate(claim: dict, ctx: QAContext, rules: dict) -> dict:
     if claim.get("kind") != "assert_object":
         return _check("duplicate", True, "n/a")
@@ -199,7 +215,9 @@ def _check_duplicate(claim: dict, ctx: QAContext, rules: dict) -> dict:
                 False,
                 f"alt-id {scheme}={value} already belongs to {owner}; suggest SAME_AS {subject} -> {owner}",
             )
-    threshold = int(rules.get("fuzzy_duplicate_threshold", 92))
+    threshold = fuzzy_threshold_for(payload.get("type", ""), rules)
+    if threshold is None:
+        return _check("duplicate", True, f"fuzzy check exempt for type '{payload.get('type', '')}'")
     hit = _fuzzy_duplicate(payload.get("type", ""), payload.get("label", ""), subject, threshold)
     if hit:
         return _check(

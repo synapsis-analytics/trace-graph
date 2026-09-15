@@ -23,6 +23,20 @@ soft_factor: 0.7
 # rapidfuzz token_set_ratio threshold (0-100) for same-type label duplicates.
 fuzzy_duplicate_threshold: 92
 
+# Per-object-type overrides for the fuzzy duplicate check (WP-I 2026-09-15).
+#   * `off` (or any value > 100) exempts the type entirely;
+#   * a higher number makes the check stricter (fewer flags).
+# Rationale: person names legitimately repeat and collide ("J. Smith" vs "John Smith") and we
+# have no disambiguating identifier for CGSpace authors, so a fuzzy hit carries no information.
+# Institution names share long boilerplate ("... International Center for ... Research"), so the
+# default 92 flags unrelated institutes; 95 keeps the true near-duplicates.
+fuzzy_duplicate_threshold_by_type:
+  person: off
+  institution: 95
+  concept: 97
+  country: off
+  region: off
+
 # signed > recorded > harvested (PLAN D6): penalty subtracted from the score.
 provenance_penalty:
   signed: 0.0

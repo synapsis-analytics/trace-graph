@@ -131,9 +131,13 @@ def shortest_path(from_id: str, to_id: str, lens: str | None = None, max_len: in
     lens_spec = get_lens(lens)
     with connect(readonly=True) as conn:
         if conn.execute("SELECT 1 FROM objects WHERE id=?", (from_id,)).fetchone() is None:
-            return {"found": False, "reason": f"unknown object {from_id}", "paths": []}
+            return {"found": False, "unknown_id": from_id, "paths": [],
+                    "reason": f"unknown object {from_id}",
+                    "explanation": f"There is no object with id {from_id} in this graph."}
         if conn.execute("SELECT 1 FROM objects WHERE id=?", (to_id,)).fetchone() is None:
-            return {"found": False, "reason": f"unknown object {to_id}", "paths": []}
+            return {"found": False, "unknown_id": to_id, "paths": [],
+                    "reason": f"unknown object {to_id}",
+                    "explanation": f"There is no object with id {to_id} in this graph."}
         prev: dict[str, tuple[str, dict, str]] = {}
         queue: deque[tuple[str, int]] = deque([(from_id, 0)])
         seen = {from_id}
@@ -159,8 +163,18 @@ def shortest_path(from_id: str, to_id: str, lens: str | None = None, max_len: in
                 prev[nxt] = (cur, dict(r), direction)
                 queue.append((nxt, dist + 1))
         if not found:
+            lens_name = lens or "any lens"
+            reason = f"no path under lens '{lens}' within {max_len} hops"
+            explanation = (
+                f"No valid path: the lens '{lens_name}' does not allow any chain of up to "
+                f"{max_len} links between these two objects. That is an answer, not an error — "
+                f"lenses deliberately refuse path types that would not be meaningful "
+                f"(for example the money lens never traverses result -> country)."
+                if lens else
+                f"No path of {max_len} links or fewer connects these two objects."
+            )
             return {"found": False, "from": from_id, "to": to_id, "lens": lens, "paths": [],
-                    "reason": f"no path under lens '{lens}' within {max_len} hops"}
+                    "reason": reason, "explanation": explanation}
         chain: list[tuple[str, dict, str]] = []
         cur = to_id
         while cur != from_id:
@@ -192,8 +206,10 @@ def shortest_path(from_id: str, to_id: str, lens: str | None = None, max_len: in
                       "predicate": row["predicate"], "attrs": json.loads(row["attrs_json"] or "{}")})
     nodes = [_node_json(node_rows[nid], deg.get(nid, 0)) for nid in
              [from_id] + [c[3] for c in chain]]  # type: ignore[misc]
+    hops = [{"from": s_["from"]["id"], "predicate": s_["predicate"], "to": s_["to"]["id"],
+             "direction": s_["direction"]} for s_ in steps]
     path = {
-        "length": len(steps), "steps": steps, "nodes": nodes, "edges": edges,
+        "length": len(steps), "hops": hops, "steps": steps, "nodes": nodes, "edges": edges,
         "explanation": explain_path(steps),
     }
     return {"found": True, "from": from_id, "to": to_id, "lens": lens, "paths": [path],
@@ -300,10 +316,12 @@ def coverage(layer: str | int | None = None, group: str | None = None, limit: in
                 continue
             c = concepts.setdefault(r["concept_id"], {
                 "id": r["concept_id"], "label": r["concept_label"], "layer": clayer,
-                "group": attrs.get("group"), "by_type": {}, "objects": 0,
+                "uri": attrs.get("uri"),
+                "group": attrs.get("group"), "by_type": {}, "objects": 0, "count": 0,
             })
             c["by_type"][r["obj_type"]] = r["n"]
             c["objects"] += r["n"]
+            c["count"] = c["objects"]
         untagged = conn.execute(
             """SELECT type, COUNT(*) c FROM objects o
                 WHERE o.type IN ('result','kp','hlo','outcome','innovation')
@@ -311,7 +329,7 @@ def coverage(layer: str | int | None = None, group: str | None = None, limit: in
              GROUP BY type"""
         ).fetchall()
         cand_rows = conn.execute(
-            "SELECT payload_json, subject, status FROM claims WHERE kind='candidate_concept'"
+            "SELECT id, payload_json, subject, status FROM claims WHERE kind='candidate_concept'"
         ).fetchall()
         taggable = conn.execute(
             """SELECT COUNT(*) c FROM objects WHERE type IN ('result','kp','hlo','outcome','innovation')"""
@@ -323,10 +341,21 @@ def coverage(layer: str | int | None = None, group: str | None = None, limit: in
         term = (payload.get("term") or payload.get("label") or r["subject"] or "").strip()
         if not term:
             continue
-        counter[term] += int(payload.get("count", 1))
+        attrs = payload.get("attrs") or {}
+        # `hits` = how many object labels the free term was seen in (taxonomy channel)
+        counter[term] += int(attrs.get("hits") or payload.get("count") or 1)
+        # `example` must be a TRACE id the UI can focus; candidate concepts do not materialise,
+        # so we offer the payload id only when it actually resolves, otherwise contexts (text).
+        example = payload.get("example") or attrs.get("example")
         cand = candidates.setdefault(term, {"term": term, "count": 0, "status": r["status"],
+                                            "claim_id": r["id"],
+                                            "example": example,
+                                            "contexts": (attrs.get("contexts") or [])[:5],
+                                            "suggested_layer": attrs.get("suggested_layer"),
                                             "suggested_for": payload.get("suggested_for"),
                                             "layer": payload.get("layer", "1")})
+        if cand.get("example") is None and example:
+            cand["example"] = example
         cand["count"] = counter[term]
     ranked = sorted(concepts.values(), key=lambda c: -c["objects"])[:limit]
     untagged_map = {r["type"]: r["c"] for r in untagged}
@@ -339,6 +368,8 @@ def coverage(layer: str | int | None = None, group: str | None = None, limit: in
         "untagged_by_type": untagged_map,
         "coverage_pct": round(100.0 * tagged_objects / taggable, 1) if taggable else 0.0,
         "taggable_objects": taggable, "tagged_objects": tagged_objects,
+        "totals": {"tagged_objects": tagged_objects, "objects": taggable,
+                   "concepts": len(concepts)},
     }
 
 

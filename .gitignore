@@ -11,3 +11,8 @@ frontend/dist/
 *.log
 /tmp/
 frontend/*.tsbuildinfo
+data/runtime/
+data/access-key.txt
+data/server.log
+data/claims/*-2*.jsonl
+!data/claims/seed-*.jsonl

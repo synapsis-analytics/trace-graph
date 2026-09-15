@@ -79,21 +79,31 @@ def get_object(object_id: str, with_claims: bool = True) -> dict | None:
                  LEFT JOIN objects o ON o.id = l.subject WHERE l.object=? ORDER BY l.predicate""",
             (object_id,),
         ).fetchall()
+        # CONTRACT (frontend): every link carries a denormalised `neighbour` {id, type, label}
+        # for the other end, on top of the flat subject/object/label/type fields.
         obj["links_out"] = [
-            {"id": r["id"], "predicate": r["predicate"], "object": r["object"],
-             "label": r["n_label"], "type": r["n_type"],
+            {"id": r["id"], "predicate": r["predicate"], "subject": object_id, "object": r["object"],
+             "label": r["n_label"] or r["object"], "type": r["n_type"],
+             "neighbour": {"id": r["object"], "label": r["n_label"] or r["object"], "type": r["n_type"]},
              "attrs": json.loads(r["attrs_json"] or "{}"), "claim_id": r["claim_id"],
              "qa": json.loads(r["qa_json"] or "{}")}
             for r in out_rows
         ]
         obj["links_in"] = [
-            {"id": r["id"], "predicate": r["predicate"], "subject": r["subject"],
-             "label": r["n_label"], "type": r["n_type"],
+            {"id": r["id"], "predicate": r["predicate"], "subject": r["subject"], "object": object_id,
+             "label": r["n_label"] or r["subject"], "type": r["n_type"],
+             "neighbour": {"id": r["subject"], "label": r["n_label"] or r["subject"], "type": r["n_type"]},
              "attrs": json.loads(r["attrs_json"] or "{}"), "claim_id": r["claim_id"],
              "qa": json.loads(r["qa_json"] or "{}")}
             for r in in_rows
         ]
-        obj["tags"] = [l for l in obj["links_out"] if l["predicate"] == "TAGGED_WITH"]
+        obj["tags"] = [
+            {"id": l["object"], "label": l["label"], "layer": l["attrs"].get("layer"),
+             "via": l["attrs"].get("via"), "confidence": l["attrs"].get("confidence"),
+             "matched_text": l["attrs"].get("matched_text"), "predicate": "TAGGED_WITH",
+             "attrs": l["attrs"]}
+            for l in obj["links_out"] if l["predicate"] == "TAGGED_WITH"
+        ]
         if with_claims:
             crows = conn.execute(
                 "SELECT * FROM claims WHERE subject=? OR object=? ORDER BY seq", (object_id, object_id)
@@ -146,6 +156,8 @@ def stats() -> dict[str, Any]:
         "totals": totals, "objects_by_type": by_type, "links_by_predicate": by_predicate,
         "claims_by_band": by_band, "claims_by_status": by_status,
         "claims_by_provenance": by_provenance, "objects_by_source": by_source,
+        # aliases for the SPA contract (same numbers, shorter names)
+        "qa_bands": by_band, "by_source": by_source,
         "last_ingest": last_ingest, "recent_versions": versions,
     }
 

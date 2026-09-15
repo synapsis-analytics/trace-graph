@@ -371,6 +371,17 @@ def run(base: str, claims_patterns: list[str], out: str, vendor: str,
     return summary
 
 
+def run_channel(limit: int | None = None, load: bool = True, out: str | None = None,
+                base: str | None = None, **_: object) -> dict:
+    """Keyword-only entry point for POST /api/ingest/taxonomy (PLAN §4). Tags the committed
+    seed batches against the live taxonomy service; the vendored export is NOT refreshed here
+    (that is a deliberate, reviewed commit — use `python -m ingest.taxonomy` for that)."""
+    out_path = C.channel_out_path(CHANNEL, out)
+    return C.channel_entry(CHANNEL, lambda: run(
+        base or DEFAULT_BASE, ["data/claims/seed-*.jsonl"], out_path,
+        "data/seed/taxonomy_v0.2.0.json", refresh_vendor=False), load=load)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="TRACE intake channel: taxonomy tagging")
     ap.add_argument("--base", default=DEFAULT_BASE)

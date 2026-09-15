@@ -533,6 +533,16 @@ def run(xlsx: str, program: str, out: str, extract: str,
     return summary
 
 
+def run_channel(limit: int | None = None, load: bool = True, out: str | None = None,
+                program: str = "Breeding for Tomorrow", **_: object) -> dict:
+    """Keyword-only entry point for POST /api/ingest/porb (PLAN §4). `limit` is not meaningful
+    for a workbook channel (the whole programme sheet set is one consistent unit) and is ignored."""
+    out_path = C.channel_out_path(CHANNEL, out)
+    return C.channel_entry(CHANNEL, lambda: run(
+        DEFAULT_XLSX, program, out_path, C.runtime_extract_path(CHANNEL),
+        "data/seed/prms_sp01_results.json"), load=load)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="TRACE intake channel: PORB")
     ap.add_argument("--xlsx", default=DEFAULT_XLSX)

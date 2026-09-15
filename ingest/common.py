@@ -649,3 +649,56 @@ def load_prms_institutions(extract_path: str | os.PathLike[str]) -> list[dict[st
                 if i.get("clarisa_id"):
                     out.setdefault(i["clarisa_id"], i)
     return list(out.values())
+
+
+# --------------------------------------------------------------------------------------
+# API-callable channel entry points (WP-I): POST /api/ingest/{channel} calls
+# `ingest.<channel>.run_channel(limit=…)` — keyword-only — and expects a dict summary.
+# Batches produced this way are written to data/claims/<channel>-<date>.jsonl (never over the
+# committed seed batches) and loaded into the registry through the normal QA gate.
+
+def channel_out_path(channel: str, out: str | os.PathLike[str] | None = None) -> str:
+    if out:
+        return str(out)
+    base = Path(os.getenv("TRACE_DATA_DIR", "data")) / "claims"
+    base.mkdir(parents=True, exist_ok=True)
+    stamp = _dt.datetime.now(_dt.timezone.utc).strftime("%Y%m%d")
+    return str(base / f"{channel}-{stamp}.jsonl")
+
+
+def runtime_extract_path(channel: str) -> str:
+    base = Path(os.getenv("TRACE_DATA_DIR", "data")) / "runtime"
+    base.mkdir(parents=True, exist_ok=True)
+    return str(base / f"{channel}-extract.json")
+
+
+def load_into_registry(paths: Sequence[str | os.PathLike[str]]) -> list[dict[str, Any]]:
+    from app.registry import load_batches  # local import: ingest must not depend on app at import time
+
+    return load_batches([Path(p) for p in paths])
+
+
+def replay_committed_batches(channel: str) -> dict[str, Any]:
+    """Fallback when the upstream source is not available on this machine (e.g. a prod worktree
+    with no PRMS snapshot): replay the committed claim batches for the channel."""
+    base = Path(os.getenv("TRACE_DATA_DIR", "data")) / "claims"
+    batches = sorted(p for p in base.glob(f"*{channel}*.jsonl"))
+    if not batches:
+        return {"channel": channel, "mode": "replay-batches", "batches": [], "loaded": []}
+    return {"channel": channel, "mode": "replay-batches",
+            "batches": [str(b) for b in batches], "loaded": load_into_registry(batches)}
+
+
+def channel_entry(channel: str, builder, load: bool = True) -> dict[str, Any]:
+    """Run `builder()` (which must write a batch and return a summary with `out`), then load it."""
+    try:
+        summary = builder()
+    except Exception as exc:  # source missing / unreadable -> honest fallback, never a crash
+        out = replay_committed_batches(channel)
+        out["error"] = f"{type(exc).__name__}: {exc}"
+        return out
+    summary.setdefault("channel", channel)
+    summary["mode"] = "live-source"
+    if load and summary.get("out"):
+        summary["loaded"] = load_into_registry([summary["out"]])
+    return summary

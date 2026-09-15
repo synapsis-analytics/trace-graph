@@ -564,6 +564,15 @@ def run(db: str, program_code: str, limit: int, out: str, extract: str,
     return summary
 
 
+def run_channel(limit: int | None = None, load: bool = True, out: str | None = None,
+                program: str = "SP01", db: str | None = None, **_: object) -> dict:
+    """Keyword-only entry point for POST /api/ingest/prms (PLAN §4)."""
+    out_path = C.channel_out_path(CHANNEL, out)
+    return C.channel_entry(CHANNEL, lambda: run(
+        db or DEFAULT_DB, program, int(limit or 50), out_path,
+        C.runtime_extract_path(CHANNEL), DEFAULT_REGISTRY, "data/seed/porb_sp01.json"), load=load)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="TRACE intake channel: PRMS")
     ap.add_argument("--db", default=DEFAULT_DB)
