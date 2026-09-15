@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root,
+  .light {
+    --bg: 248 250 252;
+    --surface: 255 255 255;
+    --line: 226 232 240;
+    --ink: 15 23 42;
+    --muted: 100 116 139;
+    --brand: 13 148 136;
+  }
+  .dark {
+    --bg: 9 14 26;
+    --surface: 17 24 39;
+    --line: 39 51 71;
+    --ink: 226 232 240;
+    --muted: 148 163 184;
+    --brand: 45 212 191;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-bg text-ink antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "tnum";
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-line;
+  }
+  *:focus-visible {
+    @apply outline-none ring-2 ring-brand ring-offset-1 ring-offset-bg;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-line bg-surface shadow-soft;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-line px-2 py-0.5 text-xs font-medium transition-colors;
+  }
+  .rail {
+    @apply w-[19rem] shrink-0 overflow-y-auto border-r border-line bg-surface;
+  }
+  .label {
+    @apply text-[11px] font-semibold uppercase tracking-wide text-muted;
+  }
+  .kbd {
+    @apply rounded border border-line bg-bg px-1.5 py-0.5 font-mono text-[10px] text-muted;
+  }
+  .link {
+    @apply text-brand underline decoration-brand/30 underline-offset-2 hover:decoration-brand;
+  }
+  .table-cell {
+    @apply border-b border-line px-3 py-2 align-top text-sm;
+  }
+}
+
+.sigma-container canvas {
+  outline: none;
+}

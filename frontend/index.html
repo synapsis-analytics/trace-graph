@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='7' r='4' fill='%230d9488'/%3E%3Ccircle cx='7' cy='24' r='4' fill='%231d4ed8'/%3E%3Ccircle cx='25' cy='24' r='4' fill='%23b45309'/%3E%3Cpath d='M16 7 7 24M16 7l9 17M7 24h18' stroke='%2364748b' stroke-width='2' fill='none'/%3E%3C/svg%3E" />
+    <title>TRACE Graph — lineage explorer</title>
+    <meta name="description" content="TRACE Graph — an open claims registry and lineage graph over CGIAR portfolio knowledge." />
+    <script>
+      try {
+        var t = localStorage.getItem("trace.theme");
+        if (t === "dark" || (!t && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+          document.documentElement.classList.remove("light");
+          document.documentElement.classList.add("dark");
+        }
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
