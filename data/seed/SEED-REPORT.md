@@ -50,7 +50,7 @@ for real-clock stamping in production runs.
 | `kp` | 31 | 33 | · | 13 | · | 77 | **77** |
 | `project` | · | · | 74 | · | · | 74 | **74** |
 | `result` | 50 | · | · | · | · | 50 | **50** |
-| `candidate_concept` | · | · | · | · | 40 | 40 | **40** |
+| `concept` *(candidate)* | · | · | · | · | 40 | 40 | **40** |
 | `hlo` | · | · | 20 | · | · | 20 | **20** |
 | `region` | 12 | · | 8 | · | · | 20 | **20** |
 | `outcome` | · | · | 16 | · | · | 16 | **16** |
@@ -171,7 +171,9 @@ reported on and are **not** summable with HLO budgets.
   hlo 5/20 · melia_study 1/1. The thin HLO and project coverage is honest signal: HLO titles are three-word slogans
   ("Target markets", "Deploy seed") and project titles are funder codes — exactly the "how should this have been
   worded" gap Jules wants surfaced.
-* **40 `candidate_concept` claims** — the most frequent terms from CGSpace `dcterms.subject` and PRMS result-title
+* **40 `candidate_concept` claims** (payload type `concept`, id namespace `trace:concept:cand-…`,
+  `attrs.candidate=true` — a deliberate choice so the QA gate routes them by *claim kind* without needing a new
+  object type) — the most frequent terms from CGSpace `dcterms.subject` and PRMS result-title
   n-grams with **no** Layer-2/3 match: *rice* (18), *seed systems* (17), *seed production* (10), *varieties* (8),
   *value chains* (7), *seed quality* (6), *feed grasses* (6), *high-throughput phenotyping* (4), *urochloa* (4) …
   Each carries up to 5 contexts and an `in_layer1` flag. This is the review queue for Jules' reconciliation loop.

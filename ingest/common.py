@@ -34,7 +34,7 @@ from jsonschema import Draft202012Validator
 TRACE_TYPES: tuple[str, ...] = (
     "program", "aow", "hlo", "indicator", "outcome", "result", "kp", "innovation",
     "institution", "country", "region", "project", "melia_study", "concept", "person",
-    "document", "candidate_concept",
+    "document",
 )
 
 PREDICATES: tuple[str, ...] = (
@@ -410,15 +410,24 @@ def candidate_concept_claim(
     suggested_layer: int = 2,
     band: str | None = "medium",
 ) -> dict[str, Any]:
-    """``candidate_concept`` claim — a frequent free term with no L2/L3 match (Jules' loop)."""
-    cid = make_id("candidate_concept", slugify(term))
+    """``candidate_concept`` claim — a frequent free term with no L2/L3 match (Jules' loop).
+
+    The payload is a normal ``concept`` object (a type the CONTRACT knows) living in the
+    ``cand-`` id namespace and flagged ``attrs.candidate = true`` / ``attrs.status = "proposed"``,
+    so the QA gate can route it to the review queue by *claim kind* without having to learn a new
+    object type. It is deliberately **not** a Layer-2/3 term until the taxonomy steering group
+    says so.
+    """
+    cid = make_id("concept", "cand-" + slugify(term))
     payload = {
         "id": cid,
-        "type": "candidate_concept",
+        "type": "concept",
         "label": trim(term, 200),
         "attrs": {
             "term": trim(term, 200),
+            "candidate": True,
             "hits": count,
+            "layer": None,
             "suggested_layer": suggested_layer,
             "contexts": [trim(c, 240) for c in (contexts or [])][:5],
             "status": "proposed",
