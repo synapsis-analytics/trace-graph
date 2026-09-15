@@ -69,7 +69,8 @@ mkdir -p data
 KEY=""
 [ -f .env ] && KEY="$(sed -n 's/^TRACE_ACCESS_KEY=\([^ #]*\).*/\1/p' .env | head -1)"
 [ -z "$KEY" ] && [ -f data/access-key.txt ] && KEY="$(cat data/access-key.txt)"
-[ -z "$KEY" ] && KEY="$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 40)"
+# (openssl, not `tr </dev/urandom | head`: that pipeline dies on SIGPIPE under `set -o pipefail`)
+[ -z "$KEY" ] && KEY="$(openssl rand -hex 20)"
 printf '%s' "$KEY" > data/access-key.txt && chmod 600 data/access-key.txt
 OPENAI_KEY=""
 if [ -f "$TAXONOMY_ENV_FILE" ]; then
